@@ -1,6 +1,8 @@
 from datetime import datetime
 import random
 import string
+import json
+import os
 
 class PasswordRecord:
     """Модель данных для хранения отдельной записи пароля."""
@@ -46,3 +48,38 @@ class AdvancedPasswordGenerator(BaseGenerator):
         password += [random.choice(char_set) for _ in range(remaining_length)]
         random.shuffle(password)
         return "".join(password)
+
+
+class PasswordController:
+    """Контроллер для обработки бизнес-логики и работы с JSON."""
+    def __init__(self, file_path: str = "passwords.json"):
+        self.file_path = file_path
+        self.records = []
+        self.load_data()
+
+    def load_data(self):
+        if not os.path.exists(self.file_path): return
+        try:
+            with open(self.file_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                self.records = [PasswordRecord(r["Service"], r["Username"], r["Password"], r["CreatedAt"]) for r in data]
+        except (json.JSONDecodeError, KeyError): pass
+
+    def save_data(self):
+        with open(self.file_path, "w", encoding="utf-8") as f:
+            json.dump([r.to_dict() for r in self.records], f, ensure_ascii=False, indent=4)
+
+    def add_record(self, service: str, username: str, password: str) -> bool:
+        if not service.strip() or not username.strip() or not password.strip(): return False
+        self.records.append(PasswordRecord(service, username, password))
+        self.save_data()
+        return True
+
+    def get_all_records(self) -> list: return self.records
+
+    def delete_record(self, index: int) -> bool:
+        if 0 <= index < len(self.records):
+            self.records.pop(index)
+            self.save_data()
+            return True
+        return False
