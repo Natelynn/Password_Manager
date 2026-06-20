@@ -83,3 +83,39 @@ class PasswordController:
             self.save_data()
             return True
         return False
+    
+    
+class PasswordView:
+    """Представление для взаимодействия с пользователем."""
+    @staticmethod
+    def show_menu():
+        print("\n=== PASSWORD MANAGER ===\n1. Посмотреть все пароли\n2. Добавить новый пароль\n3. Сгенерировать пароль\n4. Удалить пароль\n5. Выйти")
+    @staticmethod
+    def display_records(records: list):
+        if not records: print("\n[!] База пуста."); return
+        print(f"\n{'№':<3} | {'Сервис':<15} | {'Логин':<15} | {'Пароль':<15}")
+        for idx, r in enumerate(records): print(f"{idx:<3} | {r.service:<15} | {r.username:<15} | {r.password:<15}")
+    @staticmethod
+    def get_input(prompt: str) -> str: return input(prompt)
+
+def main():
+    controller = PasswordController()
+    generator = AdvancedPasswordGenerator()
+    view = PasswordView()
+    while True:
+        view.show_menu()
+        choice = view.get_input("Действие: ").strip()
+        if choice == "1": view.display_records(controller.get_all_records())
+        elif choice == "2":
+            if controller.add_record(view.get_input("Сервис: "), view.get_input("Логин: "), view.get_input("Пароль: ")): print("[+] Сохранено")
+            else: print("[-] Ошибка валидации")
+        elif choice == "3": print(f"Пароль: {generator.generate()}")
+        elif choice == "4":
+            try:
+                if controller.delete_record(int(view.get_input("Номер для удаления: "))): print("[+] Удалено")
+                else: print("[-] Не найдено")
+            except ValueError: print("[-] Некорректный ввод")
+        elif choice == "5": break
+
+if __name__ == "__main__":
+    main()
